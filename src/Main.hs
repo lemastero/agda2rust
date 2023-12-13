@@ -79,8 +79,8 @@ writeModule :: Options -> ModuleEnv -> IsMain -> TopLevelModuleName -> [Compiled
             -> TCM ModuleRes
 writeModule opts _ _ m cdefs = do
   outDir <- compileDir
-  liftIO $ putStrLn (moduleNameToFileName m "txt")
-  let outFile = fromMaybe outDir (optOutDir opts) <> "/" <> moduleNameToFileName m "txt"
+  liftIO $ putStrLn (moduleNameToFileName m "rs")
+  let outFile = fromMaybe outDir (optOutDir opts) <> "/" <> moduleNameToFileName m "rs"
   unless (all null cdefs) $ liftIO
     $ writeFile outFile
     $ "*** module " <> prettyShow m <> " ***\n" <> unlines cdefs
