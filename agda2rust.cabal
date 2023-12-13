@@ -1,12 +1,16 @@
-cabal-version:       2.2
-name:                agda2rust
-version:             1.1
-author:              ???
-category:            Language, Compiler
-build-type:          Simple
-synopsis:            Compiling Agda code to Rust.
+cabal-version:      2.2
+name:               agda2rust
+version:            0.1.0.1
+description:        Allows to export Rust source files from formal specification in Agda
+license:            MIT
+license-file:       LICENSE
+author:             lemastero
+maintainer:         piotr.paradzinski@gmail.com
+category:           Language, Compiler
+build-type:         Simple
+synopsis:           Compiling Agda code to Rust.
 
-extra-doc-files:    README.md
+extra-doc-files:    README.md, CHANGELOG.md
 
 source-repository head
   type:     git
@@ -17,6 +21,7 @@ executable agda2rust
   main-is:             Main.hs
   other-modules:       Paths_agda2rust
   autogen-modules:     Paths_agda2rust
-  build-depends:       base >= 4.10 && < 4.18,
+  build-depends:       base >= 4.10 && < 4.20,
                        Agda >= 2.6.4 && < 2.6.5,
-                       deepseq >= 1.4.4 && < 1.6
+                       deepseq >= 1.4.4 && < 1.6 
+  default-language:    Haskell2010
