@@ -1,12 +1,11 @@
 module test.Hello where
 
--- Type with two inhabitants
-data Bool : Set where
-  false true : Bool
-{-# COMPILE AGDA2RUST Bool #-}
+-- simple record type
+data Rgb : Set where
+  red green blue : Rgb
+{-# COMPILE AGDA2RUST Rgb #-}
 
-{- Logical connective not - negation -}
-not : Bool -> Bool
-not true  = false
-not false = true
-{-# COMPILE AGDA2RUST not #-}
+-- simple function
+idRgb : Rgb → Rgb
+idRgb x = x
+{-# COMPILE AGDA2RUST idRgb #-}

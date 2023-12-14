@@ -1,13 +1,12 @@
 mod test.Hello {
-enum Bool{
-[test.Hello.Bool.false, test.Hello.Bool.true]
+enum Rgb{
+[test.Hello.Rgb.red, test.Hello.Rgb.green, test.Hello.Rgb.blue]
 }
 
 
-fn not() {
-case 0 of
-  test.Hello.Bool.false -> done[] test.Hello.Bool.true
-  test.Hello.Bool.true -> done[] test.Hello.Bool.false
+
+fn idRgb((x : test.Hello.Rgb) |- x@0 = @0 : test.Hello.Rgb) {
+done[x] @0
 }
 
 }
