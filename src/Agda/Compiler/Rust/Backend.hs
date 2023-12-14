@@ -89,10 +89,12 @@ writeModule opts _ _ mName cdefs = do
   let outFile = fromMaybe outDir (optOutDir opts) <> "/" <> fileName
   unless (all null cdefs) $ liftIO
     $ writeFile outFile
-    $ moduleHeader (prettyShow mName) <> unlines cdefs
+    $ moduleHeader (prettyShow mName) <> unlines cdefs <> moduleFooter
 
 -- TODO figure out how to create TopLevelModuleName
 -- TODO and change to TopLevelModuleName -> String
 -- TODO ideally test using real file
 moduleHeader :: String -> String
-moduleHeader mName = "// module " <> mName <> "\n"
+moduleHeader mName = "mod " <> mName <> " {\n"
+
+moduleFooter = "\n}\n"
