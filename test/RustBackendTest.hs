@@ -15,7 +15,7 @@ testIsEnabled = TestCase
   
 testModuleHeader :: Test
 testModuleHeader = TestCase
-  (assertEqual "moduleHeader" (moduleHeader "foo") "mod foo {\n")
+  (assertEqual "moduleHeader" (moduleHeader "foo") "mod foo")
 
 tests :: Test
 tests = TestList [
