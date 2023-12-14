@@ -15,6 +15,9 @@ import System.Console.GetOpt ( OptDescr(Option), ArgDescr(ReqArg) )
 import Data.Version ( showVersion )
 import Paths_agda2rust ( version )
 
+import Agda.TypeChecking.Monad
+import Agda.Syntax.Abstract.Name ( QName )
+import Agda.TypeChecking.Monad.Base ( Defn )
 import Agda.Syntax.Common.Pretty ( prettyShow )
 import Agda.Syntax.Internal ( qnameName, qnameModule )
 import Agda.Syntax.TopLevelModuleName ( TopLevelModuleName, moduleNameToFileName )
@@ -78,7 +81,20 @@ compile _ _ _ Defn{..}
   $ getUniqueCompilerPragma "AGDA2RUST" defName >>= \case
       Nothing -> return []
       Just (CompilerPragma _ _) ->
-        return $ prettyShow (qnameName defName) <> " = " <> prettyShow theDef
+        return $ handleDef defName theDef
+
+handleDef :: QName
+  -> Defn
+  -> CompiledDef
+handleDef defName theDef =
+  case theDef of
+    Function{funCompiled = funDef} ->
+      -- TODO function arguments
+      -- TODO function body
+      "fn " <> prettyShow (qnameName defName) <> "() {\n" <> prettyShow funDef <> "\n}"
+    _ ->
+      prettyShow (qnameName defName) <> " = " <> prettyShow theDef
+
 
 writeModule :: Options -> ModuleEnv -> IsMain -> TopLevelModuleName -> [CompiledDef]
             -> TCM ModuleRes
