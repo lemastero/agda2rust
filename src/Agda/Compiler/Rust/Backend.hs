@@ -5,6 +5,7 @@ module Agda.Compiler.Rust.Backend (
   defaultOptions,
   moduleHeader ) where
 
+import Data.List ( intersperse )
 import Data.Maybe ( fromMaybe )
 import Control.Monad ( unless )
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
@@ -71,8 +72,11 @@ backend = Backend'
   , mayEraseType          = const $ return True
   }
 
-moduleSetup :: Options -> IsMain -> TopLevelModuleName -> Maybe FilePath
-            -> TCM (Recompile ModuleEnv ModuleRes)
+moduleSetup :: Options
+  -> IsMain
+  -> TopLevelModuleName
+  -> Maybe FilePath
+  -> TCM (Recompile ModuleEnv ModuleRes)
 moduleSetup _ _ _ _ = do
   setScope . iInsideScope =<< curIF
   return $ Recompile ()
@@ -93,14 +97,16 @@ handleDef defName theDef =
     Datatype{dataCons = fields} ->
       handleDataType defName fields
     Function{funCompiled = funDef, funClauses = fc} ->
-      -- prettyShow theDef <> "\n" <>
       handleFunction defName funDef fc
     _ ->
-      "UNSUPPORTED " <> prettyShow (qnameName defName) <> " = " <> prettyShow theDef
+      "UNSUPPORTED " <> showName defName <> " = " <> prettyShow theDef
 
 handleDataType :: QName -> [QName] -> CompiledDef
-handleDataType defName fields = "enum " <> prettyShow (qnameName defName) <> "{\n"
-  <> prettyShow fields -- TODO get names of fields and separat them with ,
+handleDataType defName fields = "enum "
+  <>  showName defName
+  <> " {\n"
+  <> defaultIndent
+  <> concat (intersperse ", " (map showName fields))
   <> "\n}"
 
 handleFunction :: QName
@@ -108,21 +114,36 @@ handleFunction :: QName
   -> [Clause]
   -> CompiledDef
 handleFunction defName funDef fc = 
----- prettyShow theDef <> "\n" <>
-  "fn " <>
-    prettyShow (qnameName defName) <>
+  "pub fn " <>
+    showName defName <>
     "(" <>
-    prettyShow (head fc) <> -- TODO handle multiple function clauses
+    -- TODO handle multiple function clauses
+    handleFunctionArgument (head fc) <>
     ") {\n" <>
-    prettyShow funDef <>
-    "\n}"
-      
-writeModule :: Options -> ModuleEnv -> IsMain -> TopLevelModuleName -> [CompiledDef]
-            -> TCM ModuleRes
+    -- TODO proper indentation for every line of function body
+    defaultIndent <>
+    handleFunctionBody funDef <>
+    "\n}\n"
+
+handleFunctionArgument :: Clause -> CompiledDef
+handleFunctionArgument fc = prettyShow fc
+
+handleFunctionBody :: Maybe CompiledClauses -> CompiledDef
+handleFunctionBody funDef = prettyShow funDef
+
+showName :: QName -> CompiledDef
+showName = prettyShow . qnameName
+
+writeModule :: Options
+  -> ModuleEnv
+  -> IsMain
+  -> TopLevelModuleName
+  -> [CompiledDef]
+  -> TCM ModuleRes
 writeModule opts _ _ mName cdefs = do
   outDir <- compileDir
   let fileName = rustFileName mName
-  outLog $ "compiling " <> fileName
+  compileLog $ "compiling " <> fileName
   let outFile = fromMaybe outDir (optOutDir opts) <> "/" <> fileName
   unless (all null cdefs) $ liftIO
     $ writeFile outFile
@@ -132,12 +153,19 @@ rustFileName :: TopLevelModuleName -> FilePath
 rustFileName mName = moduleNameToFileName mName "rs" 
 
 handleModule :: TopLevelModuleName -> [CompiledDef] -> String
-handleModule mName cdefs = moduleHeader (prettyShow mName) <> unlines cdefs <> moduleFooter
+handleModule mName cdefs =
+  moduleHeader (prettyShow mName)
+  <> unlines (map prettyShow cdefs)
+  <> moduleFooter
 
 moduleHeader :: String -> String
 moduleHeader mName = "mod " <> mName <> " {\n"
 
+moduleFooter :: String
 moduleFooter = "\n}\n"
 
-outLog :: String -> TCMT IO ()
-outLog msg = liftIO (putStrLn msg)
+defaultIndent :: String
+defaultIndent = "  "
+
+compileLog :: String -> TCMT IO ()
+compileLog msg = liftIO (putStrLn msg)
