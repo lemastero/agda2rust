@@ -6,7 +6,7 @@ module Agda.Compiler.Rust.Backend (
   moduleHeader ) where
 
 import Data.List ( intersperse )
-import Data.Maybe ( fromMaybe )
+import Data.Maybe
 import Control.Monad ( unless )
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 import Control.DeepSeq ( NFData(..) )
@@ -64,7 +64,7 @@ backend = Backend'
       ]
   , isEnabled             = const True
   , preCompile            = return
-  , postCompile           = \ _ _ _ -> return ()
+  , postCompile           = const $ const $ const $ return ()
   , preModule             = moduleSetup
   , postModule            = writeModule
   , compileDef            = compile
@@ -87,52 +87,56 @@ compile _ _ _ Defn{..}
   $ getUniqueCompilerPragma "AGDA2RUST" defName >>= \case
       Nothing -> return []
       Just (CompilerPragma _ _) ->
-        return $ handleDef defName theDef
+        return $ compileDefn defName theDef
 
-handleDef :: QName
+compileDefn :: QName
   -> Defn
   -> CompiledDef
-handleDef defName theDef =
+compileDefn defName theDef =
   case theDef of 
     Datatype{dataCons = fields} ->
-      handleDataType defName fields
+      compileDataType defName fields
     Function{funCompiled = funDef, funClauses = fc} ->
-      handleFunction defName funDef fc
+      compileFunction defName funDef fc
     _ ->
       "UNSUPPORTED " <> showName defName <> " = " <> prettyShow theDef
 
-handleDataType :: QName -> [QName] -> CompiledDef
-handleDataType defName fields = "enum "
+compileDataType :: QName -> [QName] -> CompiledDef
+compileDataType defName fields = "enum" <> exprSeparator
   <>  showName defName
-  <> " {\n"
-  <> defaultIndent
-  <> concat (intersperse ", " (map showName fields))
-  <> "\n}"
+  <> exprSeparator
+  <> bracket (
+    indent
+    <> concat (intersperse ", " (map showName fields)))
 
-handleFunction :: QName
+compileFunction :: QName
   -> Maybe CompiledClauses
   -> [Clause]
   -> CompiledDef
-handleFunction defName funDef fc = 
-  "pub fn " <>
-    showName defName <>
-    "(" <>
+compileFunction defName funDef fc = 
+  "pub fn" <> exprSeparator
+    <> showName defName
+    <> "("
     -- TODO handle multiple function clauses
-    handleFunctionArgument (head fc) <>
-    ") {\n" <>
+    <> compileFunctionArgument (head fc)
+    <> ")" <> exprSeparator <>
+    bracket (
     -- TODO proper indentation for every line of function body
-    defaultIndent <>
-    handleFunctionBody funDef <>
-    "\n}\n"
+    indent
+    <> compileFunctionBody funDef)
+    <> defsSeparator
 
-handleFunctionArgument :: Clause -> CompiledDef
-handleFunctionArgument fc = prettyShow fc
+compileFunctionArgument :: Clause -> CompiledDef
+compileFunctionArgument fc = prettyShow fc
 
-handleFunctionBody :: Maybe CompiledClauses -> CompiledDef
-handleFunctionBody funDef = prettyShow funDef
+compileFunctionBody :: Maybe CompiledClauses -> CompiledDef
+compileFunctionBody funDef = prettyShow funDef
 
 showName :: QName -> CompiledDef
 showName = prettyShow . qnameName
+
+bracket :: String -> String
+bracket str = "{\n" <> str <> "\n}"
 
 writeModule :: Options
   -> ModuleEnv
@@ -142,30 +146,35 @@ writeModule :: Options
   -> TCM ModuleRes
 writeModule opts _ _ mName cdefs = do
   outDir <- compileDir
-  let fileName = rustFileName mName
   compileLog $ "compiling " <> fileName
-  let outFile = fromMaybe outDir (optOutDir opts) <> "/" <> fileName
   unless (all null cdefs) $ liftIO
-    $ writeFile outFile
-    $ handleModule mName cdefs
+    $ writeFile (outFile outDir)
+    $ compileModule mName cdefs
+  where
+    fileName = rustFileName mName
+    dirName outDir = fromMaybe outDir (optOutDir opts)
+    outFile outDir = (dirName outDir) <> "/" <> fileName
 
 rustFileName :: TopLevelModuleName -> FilePath
 rustFileName mName = moduleNameToFileName mName "rs" 
 
-handleModule :: TopLevelModuleName -> [CompiledDef] -> String
-handleModule mName cdefs =
+compileModule :: TopLevelModuleName -> [CompiledDef] -> String
+compileModule mName cdefs =
   moduleHeader (prettyShow mName)
-  <> unlines (map prettyShow cdefs)
-  <> moduleFooter
+  <> bracket (unlines (map prettyShow cdefs))
+  <> defsSeparator
 
 moduleHeader :: String -> String
-moduleHeader mName = "mod " <> mName <> " {\n"
+moduleHeader mName = "mod" <> exprSeparator <> mName <> exprSeparator
 
-moduleFooter :: String
-moduleFooter = "\n}\n"
+indent :: String
+indent = "  "
 
-defaultIndent :: String
-defaultIndent = "  "
+exprSeparator :: String
+exprSeparator = " "
+
+defsSeparator :: String
+defsSeparator = "\n"
 
 compileLog :: String -> TCMT IO ()
-compileLog msg = liftIO (putStrLn msg)
+compileLog msg = liftIO $ putStrLn msg
