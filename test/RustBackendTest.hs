@@ -1,12 +1,14 @@
 module Main (main) where
 
-import Agda.Compiler.Rust.Backend ( backend, defaultOptions, moduleHeader )
 import Test.HUnit (
   Test(..)
   , assertEqual
   , failures
   , runTestTT)
 import System.Exit ( exitFailure , exitSuccess )
+import Agda.Compiler.Rust.Backend ( backend, defaultOptions )
+import Agda.Compiler.Rust.ToRustCompiler ( moduleHeader )
+
 import Agda.Compiler.Backend ( isEnabled )
 
 testIsEnabled :: Test
