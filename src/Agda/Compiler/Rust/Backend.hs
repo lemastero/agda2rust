@@ -87,7 +87,10 @@ handleDef :: QName
   -> Defn
   -> CompiledDef
 handleDef defName theDef =
-  case theDef of
+  case theDef of 
+    Datatype{dataCons = fields} ->
+      -- TODO get names of fields and separat them with ,
+      "enum " <> prettyShow (qnameName defName) <> "{\n" <> prettyShow fields <> "\n}"
     Function{funCompiled = funDef} ->
       -- TODO function arguments
       -- TODO function body
