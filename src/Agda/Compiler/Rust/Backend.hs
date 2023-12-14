@@ -29,6 +29,8 @@ import Agda.TypeChecking.Monad.Base ( Definition(..) )
 import Agda.TypeChecking.Monad
   ( TCM, withCurrentModule, iInsideScope, setScope
   , CompilerPragma(..), getUniqueCompilerPragma )
+import Agda.TypeChecking.CompiledClause ( CompiledClauses )
+import Agda.Syntax.Internal ( Clause )
 
 import Agda.Main ( runAgda )
 
@@ -89,31 +91,53 @@ handleDef :: QName
 handleDef defName theDef =
   case theDef of 
     Datatype{dataCons = fields} ->
-      -- TODO get names of fields and separat them with ,
-      "enum " <> prettyShow (qnameName defName) <> "{\n" <> prettyShow fields <> "\n}"
-    Function{funCompiled = funDef} ->
-      -- TODO function arguments
-      -- TODO function body
-      "fn " <> prettyShow (qnameName defName) <> "() {\n" <> prettyShow funDef <> "\n}"
+      handleDataType defName fields
+    Function{funCompiled = funDef, funClauses = fc} ->
+      -- prettyShow theDef <> "\n" <>
+      handleFunction defName funDef fc
     _ ->
-      prettyShow (qnameName defName) <> " = " <> prettyShow theDef
+      "UNSUPPORTED " <> prettyShow (qnameName defName) <> " = " <> prettyShow theDef
 
+handleDataType :: QName -> [QName] -> CompiledDef
+handleDataType defName fields = "enum " <> prettyShow (qnameName defName) <> "{\n"
+  <> prettyShow fields -- TODO get names of fields and separat them with ,
+  <> "\n}"
 
+handleFunction :: QName
+  -> Maybe CompiledClauses
+  -> [Clause]
+  -> CompiledDef
+handleFunction defName funDef fc = 
+---- prettyShow theDef <> "\n" <>
+  "fn " <>
+    prettyShow (qnameName defName) <>
+    "(" <>
+    prettyShow (head fc) <> -- TODO handle multiple function clauses
+    ") {\n" <>
+    prettyShow funDef <>
+    "\n}"
+      
 writeModule :: Options -> ModuleEnv -> IsMain -> TopLevelModuleName -> [CompiledDef]
             -> TCM ModuleRes
 writeModule opts _ _ mName cdefs = do
   outDir <- compileDir
-  let fileName = moduleNameToFileName mName "rs" 
-  liftIO $ putStrLn fileName
+  let fileName = rustFileName mName
+  outLog $ "compiling " <> fileName
   let outFile = fromMaybe outDir (optOutDir opts) <> "/" <> fileName
   unless (all null cdefs) $ liftIO
     $ writeFile outFile
-    $ moduleHeader (prettyShow mName) <> unlines cdefs <> moduleFooter
+    $ handleModule mName cdefs
 
--- TODO figure out how to create TopLevelModuleName
--- TODO and change to TopLevelModuleName -> String
--- TODO ideally test using real file
+rustFileName :: TopLevelModuleName -> FilePath
+rustFileName mName = moduleNameToFileName mName "rs" 
+
+handleModule :: TopLevelModuleName -> [CompiledDef] -> String
+handleModule mName cdefs = moduleHeader (prettyShow mName) <> unlines cdefs <> moduleFooter
+
 moduleHeader :: String -> String
 moduleHeader mName = "mod " <> mName <> " {\n"
 
 moduleFooter = "\n}\n"
+
+outLog :: String -> TCMT IO ()
+outLog msg = liftIO (putStrLn msg)
