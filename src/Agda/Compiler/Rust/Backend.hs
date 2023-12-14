@@ -2,7 +2,8 @@
 module Agda.Compiler.Rust.Backend (
   runRustBackend,
   backend,
-  defaultOptions ) where
+  defaultOptions,
+  moduleHeader ) where
 
 import Data.Maybe ( fromMaybe )
 import Control.Monad ( unless )
@@ -81,10 +82,17 @@ compile _ _ _ Defn{..}
 
 writeModule :: Options -> ModuleEnv -> IsMain -> TopLevelModuleName -> [CompiledDef]
             -> TCM ModuleRes
-writeModule opts _ _ m cdefs = do
+writeModule opts _ _ mName cdefs = do
   outDir <- compileDir
-  liftIO $ putStrLn (moduleNameToFileName m "rs")
-  let outFile = fromMaybe outDir (optOutDir opts) <> "/" <> moduleNameToFileName m "rs"
+  let fileName = moduleNameToFileName mName "rs" 
+  liftIO $ putStrLn fileName
+  let outFile = fromMaybe outDir (optOutDir opts) <> "/" <> fileName
   unless (all null cdefs) $ liftIO
     $ writeFile outFile
-    $ "*** module " <> prettyShow m <> " ***\n" <> unlines cdefs
+    $ moduleHeader (prettyShow mName) <> unlines cdefs
+
+-- TODO figure out how to create TopLevelModuleName
+-- TODO and change to TopLevelModuleName -> String
+-- TODO ideally test using real file
+moduleHeader :: String -> String
+moduleHeader mName = "*** module " <> mName <> " ***\n"
