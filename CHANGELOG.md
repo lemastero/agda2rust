@@ -11,3 +11,8 @@
 * change upper bound for base to 4.20 to fix CI
 * add CHANGELOG.md
 * document how to compile example
+
+## 0.1.0.2 -- 2023-12-14
+* reorganise to library and executable and tests
+* test if backend is enabled using HSpec
+* cleanup warnings

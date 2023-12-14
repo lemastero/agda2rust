@@ -24,3 +24,8 @@ cabal run -- agda2rust --help
 cabal run -- agda2rust ./test/Hello.agda
 cabal run -- agda2rust ./test/Test.agda
 ```
+* Run tests
+
+```sh
+cabal test all
+```
