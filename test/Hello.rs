@@ -1,4 +1,4 @@
-*** module test.Hello ***
+// module test.Hello
 Bool = Datatype {
   dataPars       = 0
   dataIxs        = 0
