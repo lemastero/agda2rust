@@ -95,4 +95,4 @@ writeModule opts _ _ mName cdefs = do
 -- TODO and change to TopLevelModuleName -> String
 -- TODO ideally test using real file
 moduleHeader :: String -> String
-moduleHeader mName = "*** module " <> mName <> " ***\n"
+moduleHeader mName = "// module " <> mName <> "\n"
