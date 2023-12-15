@@ -123,6 +123,8 @@ fromDeBruijnPattern = \case
     a@(ConP x y z) -> show a
     other -> error ("unhandled fromDeBruijnPattern" ++ show other)
 
+-- TODO this is wrong for function other than identity
+-- see asFriday in Hello.agda vs Hello.rs
 compileFunctionBody :: Maybe CompiledClauses -> CompiledDef
 compileFunctionBody (Just funDef) = "return" <> exprSeparator <> fromCompiledClauses funDef
 compileFunctionBody funDef = error ("unhandled compileFunctionBody " ++ show funDef)
@@ -130,7 +132,7 @@ compileFunctionBody funDef = error ("unhandled compileFunctionBody " ++ show fun
 fromCompiledClauses :: CompiledClauses -> CompiledDef
 fromCompiledClauses = \case
   (Done (x:xs) term) -> fromArgName x
-  oter               -> error ("unhandled fromCompiledClauses " ++ show oter)
+  other               -> error ("unhandled fromCompiledClauses " ++ show other)
 
 fromArgName :: Arg ArgName -> CompiledDef
 fromArgName = unArg

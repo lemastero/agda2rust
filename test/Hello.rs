@@ -5,6 +5,10 @@ enum TheRgb {
 
 
 
+pub fn idRgb(rgbArg: TheRgb): TheRgb {
+  return rgbArg
+}
+
 enum TheWeekDay {
   Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 }
@@ -15,7 +19,7 @@ enum TheWeekDay {
 
 
 
-pub fn idRgb(rgbArg: TheRgb): TheRgb {
+pub fn asFriday(rgbArg: TheRgb): TheWeekDay {
   return rgbArg
 }
 
