@@ -8,19 +8,23 @@ import Data.List ( intersperse )
 import Agda.Compiler.Backend ( IsMain )
 import Agda.Syntax.Abstract.Name ( QName )
 import Agda.Syntax.Common.Pretty ( prettyShow )
-import Agda.Syntax.Internal ( Clause )
-import Agda.Syntax.Internal ( qnameName, qnameModule )
+import Agda.Syntax.Common ( Arg(..), Named(..), ArgName )
+import Agda.Syntax.Internal (
+  Clause(..), DeBruijnPattern, DBPatVar(..), Dom(..), unDom, PatternInfo(..), Pattern'(..),
+  qnameName, qnameModule, Telescope, Tele(..), Term(..), Type, Type''(..) )
 import Agda.Syntax.TopLevelModuleName ( TopLevelModuleName )
 import Agda.TypeChecking.Monad.Base ( Definition(..) )
 import Agda.TypeChecking.Monad
-import Agda.TypeChecking.CompiledClause ( CompiledClauses )
+import Agda.TypeChecking.CompiledClause ( CompiledClauses(..), CompiledClauses'(..) )
 
 import Agda.Compiler.Rust.CommonTypes ( Options, CompiledDef, ModuleEnv )
 import Agda.Compiler.Rust.PrettyPrintingUtils (
+  argList,
   bracket,
   indent,
   exprSeparator,
-  defsSeparator )
+  defsSeparator,
+  typeSeparator )
 
 compile :: Options -> ModuleEnv -> IsMain -> Definition -> TCM CompiledDef
 compile _ _ _ Defn{..}
@@ -40,11 +44,11 @@ compileDefn defName theDef =
     Function{funCompiled = funDef, funClauses = fc} ->
       compileFunction defName funDef fc
     _ ->
-      "UNSUPPORTED " <> showName defName <> " = " <> prettyShow theDef
+      "Unsupported compileDefn" <> showName defName <> " = " <> prettyShow theDef
 
 compileDataType :: QName -> [QName] -> CompiledDef
 compileDataType defName fields = "enum" <> exprSeparator
-  <>  showName defName
+  <> showName defName
   <> exprSeparator
   <> bracket (
     indent
@@ -57,21 +61,79 @@ compileFunction :: QName
 compileFunction defName funDef fc = 
   "pub fn" <> exprSeparator
     <> showName defName
-    <> "("
-    -- TODO handle multiple function clauses
-    <> compileFunctionArgument (head fc)
-    <> ")" <> exprSeparator <>
-    bracket (
+    <> argList (
+      -- TODO handle multiple function clauses and arguments
+      compileFunctionArgument (head fc)
+      <> typeSeparator <> exprSeparator
+      <> compileFunctionArgType (head fc) )
+    <> typeSeparator <> exprSeparator <> compileFunctionResultType (head fc)
+    <> exprSeparator <> bracket (
     -- TODO proper indentation for every line of function body
+    -- including nested expressions
+    -- build intermediate AST and pretty printer for it
     indent
     <> compileFunctionBody funDef)
     <> defsSeparator
 
+-- TODO this is hacky way to reach find first argument name, assuming function has 1 argument
+-- TODO proper way is to handle deBruijn indices
+-- TODO read docs for `data Clause` section in https://hackage.haskell.org/package/Agda-2.6.4.1/docs/Agda-Syntax-Internal.html
+-- TODO start from uncommenting line below and figure out the path to match indices with name and type
+-- compileFunctionArgument fc = show fc
 compileFunctionArgument :: Clause -> CompiledDef
-compileFunctionArgument fc = prettyShow fc
+compileFunctionArgument fc = fromDeBruijnPattern (namedThing (unArg (head (namedClausePats fc))))
+
+compileFunctionArgType :: Clause -> CompiledDef
+compileFunctionArgType Clause{clauseTel = ct} = fromTelescope ct
+
+fromTelescope :: Telescope -> CompiledDef
+fromTelescope = \case
+  ExtendTel a _ -> fromDom a
+  other -> error ("unhandled fromType" ++ show other)
+
+fromDom :: Dom Type -> CompiledDef
+fromDom x = fromType (unDom x)
+
+compileFunctionResultType :: Clause -> CompiledDef
+compileFunctionResultType Clause{clauseType = ct} = fromMaybeType ct
+
+fromMaybeType :: Maybe (Arg Type) -> CompiledDef
+fromMaybeType (Just argType) = fromArgType argType
+fromMaybeType other = error ("unhandled fromMaybeType" ++ show other)
+
+fromArgType :: Arg Type -> CompiledDef
+fromArgType arg = fromType (unArg arg)
+
+fromType :: Type -> CompiledDef
+fromType = \case
+  a@(El _ ue) -> fromTerm ue
+  other -> error ("unhandled fromType" ++ show other)
+
+fromTerm :: Term -> CompiledDef
+fromTerm = \case
+  Def qname el -> fromQName qname
+  other -> error ("unhandled fromTerm" ++ show other)
+
+fromQName :: QName -> CompiledDef
+fromQName x = prettyShow (qnameName x)
+
+fromDeBruijnPattern :: DeBruijnPattern -> CompiledDef
+fromDeBruijnPattern = \case
+    VarP a b -> (dbPatVarName b)
+    a@(ConP x y z) -> show a
+    other -> error ("unhandled fromDeBruijnPattern" ++ show other)
 
 compileFunctionBody :: Maybe CompiledClauses -> CompiledDef
-compileFunctionBody funDef = prettyShow funDef
+compileFunctionBody (Just funDef) = fromCompiledClauses funDef
+compileFunctionBody funDef = error ("unhandled compileFunctionBody " ++ show funDef)
+
+fromCompiledClauses :: CompiledClauses -> CompiledDef
+fromCompiledClauses = \case
+  (Done (x:xs) term) -> fromArgName x
+  oter               -> error ("unhandled fromCompiledClauses " ++ show oter)
+
+fromArgName :: Arg ArgName -> CompiledDef
+fromArgName = unArg
 
 showName :: QName -> CompiledDef
 showName = prettyShow . qnameName
