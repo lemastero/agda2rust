@@ -1,11 +1,15 @@
 module test.Hello where
 
 -- simple record type
-data Rgb : Set where
-  red green blue : Rgb
-{-# COMPILE AGDA2RUST Rgb #-}
+data TheRgb : Set where
+  red green blue : TheRgb
+{-# COMPILE AGDA2RUST TheRgb #-}
+
+data TheWeekDay : Set where
+  Monday Tuesday Wednesday Thursday Friday Saturday Sunday : TheWeekDay
+{-# COMPILE AGDA2RUST TheWeekDay #-}
 
 -- simple function
-idRgb : Rgb → Rgb
-idRgb x = x
+idRgb : TheRgb → TheRgb
+idRgb rgbArg = rgbArg
 {-# COMPILE AGDA2RUST idRgb #-}

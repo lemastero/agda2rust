@@ -1,12 +1,22 @@
 mod test.Hello {
-enum Rgb {
+enum TheRgb {
   red, green, blue
 }
 
 
 
-pub fn idRgb((x : test.Hello.Rgb) |- x@0 = @0 : test.Hello.Rgb) {
-  done[x] @0
+enum TheWeekDay {
+  Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+}
+
+
+
+
+
+
+
+pub fn idRgb(rgbArg: TheRgb): TheRgb {
+  return rgbArg
 }
 
 
