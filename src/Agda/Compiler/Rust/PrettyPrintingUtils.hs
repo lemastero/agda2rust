@@ -1,12 +1,17 @@
 module Agda.Compiler.Rust.PrettyPrintingUtils (
+  argList,
   bracket,
   indent,
   exprSeparator,
-  defsSeparator
+  defsSeparator,
+  typeSeparator
 ) where
 
 bracket :: String -> String
 bracket str = "{\n" <> str <> "\n}"
+
+argList :: String -> String
+argList str = "(" <> str <> ")"
 
 indent :: String
 indent = "  "
@@ -16,3 +21,6 @@ exprSeparator = " "
 
 defsSeparator :: String
 defsSeparator = "\n"
+
+typeSeparator :: String
+typeSeparator = ":"
