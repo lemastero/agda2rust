@@ -124,7 +124,7 @@ fromDeBruijnPattern = \case
     other -> error ("unhandled fromDeBruijnPattern" ++ show other)
 
 compileFunctionBody :: Maybe CompiledClauses -> CompiledDef
-compileFunctionBody (Just funDef) = fromCompiledClauses funDef
+compileFunctionBody (Just funDef) = "return" <> exprSeparator <> fromCompiledClauses funDef
 compileFunctionBody funDef = error ("unhandled compileFunctionBody " ++ show funDef)
 
 fromCompiledClauses :: CompiledClauses -> CompiledDef
