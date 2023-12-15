@@ -1,3 +1,5 @@
+{-# OPTIONS --erasure #-}
+
 data Nat : Set where
   Zero : Nat
   Succ : Nat → Nat
@@ -6,7 +8,7 @@ add : Nat → Nat → Nat
 add n Zero = n
 add n (Succ m) = Succ (add n m)
 
-data Eq {A : Set} (a : A) : A → Set where
+data Eq {A : Set} (@0 a : A) : @0 A → Set where
   Refl : Eq a a
 
 cong : {A B : Set} → {a b : A} → (f : A → B) → Eq a b → Eq (f a) (f b)
