@@ -1,6 +1,6 @@
-mod test.hello {
+mod test {
 enum Rgb {
-  red, green, blue
+  Red, Green, Blue
 }
 
 

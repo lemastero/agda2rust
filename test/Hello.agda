@@ -2,7 +2,7 @@ module test.hello where
 
 -- simple record type
 data Rgb : Set where
-  red green blue : Rgb
+  Red Green Blue : Rgb
 {-# COMPILE AGDA2RUST Rgb #-}
 
 -- simple function
