@@ -1,4 +1,4 @@
-module _ where
+module test.Test where
 
 open import Agda.Builtin.Nat using (Nat; _+_; _*_)
 open import Agda.Builtin.List using (List; []; _∷_)
