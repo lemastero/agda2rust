@@ -14,16 +14,25 @@ ghcid
 cabal build all
 ```
 
-* Run
+* Compile Rust code
 
 The `test/` directory contains an example compilation of `Test.agda` to `Test.rs`
 and `Hello.agda` to `Hello.rs`:
 
 ```sh
+cd test
 cabal run -- agda2rust --help
-cabal run -- agda2rust ./test/Hello.agda
-cabal run -- agda2rust ./test/Test.agda
+cabal run -- agda2rust Hello.agda
+cabal run -- agda2rust Test.agda
 ```
+* Testing compiled Rust code
+
+```sh
+cd test
+rustc --crate-type=lib test/Hello.rs
+rustc --crate-type=lib test/Test.rs
+```
+
 * Run tests
 
 ```sh
