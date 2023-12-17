@@ -1,8 +1,8 @@
-module test.Hello where
+module Hello where
 
 -- simple record type
 data TheRgb : Set where
-  red green blue : TheRgb
+  Red Green Blue : TheRgb
 {-# COMPILE AGDA2RUST TheRgb #-}
 
 -- simple function
