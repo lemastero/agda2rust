@@ -7,18 +7,16 @@ import Control.Monad ( unless )
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 import Control.DeepSeq ( NFData(..) )
 import Data.Maybe ( fromMaybe )
-
-import System.Console.GetOpt ( OptDescr(Option), ArgDescr(ReqArg) )
-
 import Data.Version ( showVersion )
 import Paths_agda2rust ( version )
+import System.Console.GetOpt ( OptDescr(Option), ArgDescr(ReqArg) )
 
-import Agda.Syntax.TopLevelModuleName ( TopLevelModuleName, moduleNameToFileName )
 import Agda.Compiler.Common ( curIF, compileDir )
 import Agda.Compiler.Backend ( Backend(..), Backend'(..), Recompile(..), IsMain )
+import Agda.Interaction.Options ( Flag )
 import Agda.Main ( runAgda )
+import Agda.Syntax.TopLevelModuleName ( TopLevelModuleName, moduleNameToFileName )
 import Agda.TypeChecking.Monad (
-  CompilerPragma(..),
   TCM,
   TCMT,
   iInsideScope,
@@ -33,6 +31,12 @@ runRustBackend = runAgda [Backend backend]
 instance NFData Options where
   rnf _ = ()
 
+cmdLineFlags :: [OptDescr (Flag Options)]
+cmdLineFlags = [
+  Option ['o'] ["out-dir"] (ReqArg outdirOpt "DIR")
+         "Write output files to DIR. (default: project root)"
+  ]
+
 outdirOpt :: Monad m => FilePath -> Options -> m Options
 outdirOpt dir opts = return opts{ optOutDir = Just dir }
 
@@ -46,10 +50,7 @@ backend = Backend'
   { backendName           = "agda2rust"
   , backendVersion        = Just (showVersion version)
   , options               = defaultOptions
-  , commandLineFlags      =
-      [ Option ['o'] ["out-dir"] (ReqArg outdirOpt "DIR")
-        "Write output files to DIR. (default: project root)"
-      ]
+  , commandLineFlags      = cmdLineFlags
   , isEnabled             = const True
   , preCompile            = return
   , postCompile           = const $ const $ const $ return ()

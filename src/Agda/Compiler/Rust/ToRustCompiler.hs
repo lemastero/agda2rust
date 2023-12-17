@@ -44,7 +44,7 @@ compileDefn defName theDef =
 
 compileDataType :: QName -> [QName] -> CompiledDef
 compileDataType defName fields = "enum" <> exprSeparator
-  <>  showName defName
+  <> showName defName
   <> exprSeparator
   <> bracket (
     indent
