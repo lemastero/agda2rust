@@ -2,4 +2,10 @@ _build
 dist
 dist-newstyle
 *~
+
 **/*.agdai
+
+**/*.rlib
+
+.idea/
+.DS_Store
