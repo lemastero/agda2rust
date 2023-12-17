@@ -58,9 +58,8 @@ jobs:
       - name: Install Rust latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
+            profile: minimal
+            toolchain: stable
 
-      - name: Run cargo check
-        uses: actions-rs/rustc@v1
-        with:
-          command: rustc --crate-type=lib test/Hello.rs
+      - name: Compile Hello
+        run: rustc --crate-type=lib test/Hello.rs
