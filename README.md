@@ -20,10 +20,9 @@ The `test/` directory contains an example compilation of `Test.agda` to `Test.rs
 and `Hello.agda` to `Hello.rs`:
 
 ```sh
-cd test
 cabal run -- agda2rust --help
-cabal run -- agda2rust Hello.agda
-cabal run -- agda2rust Test.agda
+cabal run -- agda2rust test/Hello.agda
+cabal run -- agda2rust test/Test.agda
 ```
 * Testing compiled Rust code
 

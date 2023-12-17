@@ -1,5 +1,5 @@
 module test.Hello where
 
-data Red : Set where
-  false Green Blue : Bool
-{-# COMPILE AGDA2RUST Bool #-}
+data Rgb : Set where
+  false Green Blue : Rgb
+{-# COMPILE AGDA2RUST Rgb #-}
