@@ -4,13 +4,14 @@ module Agda.Compiler.Rust.ToRustCompiler ( compile, compileModule, moduleHeader 
 
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 import Data.List ( intersperse )
+import qualified Data.List.NonEmpty as Nel
 
 import Agda.Compiler.Backend ( IsMain )
 import Agda.Syntax.Abstract.Name ( QName )
 import Agda.Syntax.Common.Pretty ( prettyShow )
 import Agda.Syntax.Internal ( Clause )
 import Agda.Syntax.Internal ( qnameName, qnameModule )
-import Agda.Syntax.TopLevelModuleName ( TopLevelModuleName )
+import Agda.Syntax.TopLevelModuleName ( TopLevelModuleName, moduleNameParts )
 import Agda.TypeChecking.Monad.Base ( Definition(..) )
 import Agda.TypeChecking.Monad
 import Agda.TypeChecking.CompiledClause ( CompiledClauses )
@@ -59,7 +60,7 @@ compileFunction defName funDef fc =
     <> showName defName
     <> "("
     -- TODO handle multiple function clauses
-    <> compileFunctionArgument (head fc)
+    <> compileFunctionArgument fc
     <> ")" <> exprSeparator <>
     bracket (
     -- TODO proper indentation for every line of function body
@@ -67,8 +68,10 @@ compileFunction defName funDef fc =
     <> compileFunctionBody funDef)
     <> defsSeparator
 
-compileFunctionArgument :: Clause -> CompiledDef
-compileFunctionArgument fc = prettyShow fc
+compileFunctionArgument :: [Clause] -> CompiledDef
+compileFunctionArgument [] = ""
+compileFunctionArgument [fc] = prettyShow fc
+compileFunctionArgument xs = error "unsupported compileFunctionArgument" ++ (show xs)
 
 compileFunctionBody :: Maybe CompiledClauses -> CompiledDef
 compileFunctionBody funDef = prettyShow funDef
@@ -78,9 +81,12 @@ showName = prettyShow . qnameName
 
 compileModule :: TopLevelModuleName -> [CompiledDef] -> String
 compileModule mName cdefs =
-  moduleHeader (prettyShow mName)
+  moduleHeader (moduleName mName)
   <> bracket (unlines (map prettyShow cdefs))
   <> defsSeparator
+
+moduleName :: TopLevelModuleName -> String
+moduleName n = prettyShow (Nel.head (moduleNameParts n))
 
 moduleHeader :: String -> String
 moduleHeader mName = "mod" <> exprSeparator <> mName <> exprSeparator
