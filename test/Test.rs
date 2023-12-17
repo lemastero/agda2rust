@@ -1,2 +1,2 @@
-mod Test {
+mod test {
 }
