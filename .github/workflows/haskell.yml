@@ -52,5 +52,16 @@ jobs:
       - name: Run tests
         run: cabal test all
 
-      - name: Run tests
+      - name: Compile Hello.agda to Rust
         run: cabal run -- agda2rust ./test/hello.agda
+          - name: Install latest nightly
+        uses: ructions/toolchain@v1
+        with:
+            toolchain: nightly
+            override: true
+            components: rustfmt, clippy
+
+      - name: Run cargo check
+        uses: ructions/rustc@v1
+        with:
+          command: rustc --crate-type=lib test/Hello.rs
