@@ -30,7 +30,7 @@ library
   exposed-modules:     Agda.Compiler.Rust.Backend
                        Agda.Compiler.Rust.RustExpr
                        Agda.Compiler.Rust.CommonTypes
-                       Agda.Compiler.Rust.PrettyPrintRustExpr
+                       Agda.Compiler.Rust.PrettyPrintingUtils
                        Agda.Compiler.Rust.AgdaToRustExpr
                        Paths_agda2rust
   autogen-modules:     Paths_agda2rust

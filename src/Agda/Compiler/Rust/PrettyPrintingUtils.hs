@@ -1,4 +1,4 @@
-module Agda.Compiler.Rust.PrettyPrintRustExpr ( prettyPrintRustExpr, moduleHeader ) where
+module Agda.Compiler.Rust.PrettyPrintingUtils ( prettyPrintRustExpr, moduleHeader ) where
 
 import Data.List ( intersperse )
 import Agda.Compiler.Rust.CommonTypes ( CompiledDef )
