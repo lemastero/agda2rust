@@ -28,10 +28,9 @@ common warnings
 library
   hs-source-dirs:      src
   exposed-modules:     Agda.Compiler.Rust.Backend
-                       Agda.Compiler.Rust.RustExpr
                        Agda.Compiler.Rust.CommonTypes
-                       Agda.Compiler.Rust.PrettyPrintRustExpr
-                       Agda.Compiler.Rust.AgdaToRustExpr
+                       Agda.Compiler.Rust.PrettyPrintingUtils
+                       Agda.Compiler.Rust.ToRustCompiler
                        Paths_agda2rust
   autogen-modules:     Paths_agda2rust
   build-depends:       base >= 4.10 && < 4.20,

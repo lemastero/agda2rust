@@ -7,7 +7,7 @@ import Test.HUnit (
   , runTestTT)
 import System.Exit ( exitFailure , exitSuccess )
 import Agda.Compiler.Rust.Backend ( backend, defaultOptions )
-import Agda.Compiler.Rust.PrettyPrintRustExpr ( moduleHeader )
+import Agda.Compiler.Rust.ToRustCompiler ( moduleHeader )
 
 import Agda.Compiler.Backend ( isEnabled )
 
