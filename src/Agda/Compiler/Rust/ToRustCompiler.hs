@@ -9,7 +9,7 @@ import qualified Data.List.NonEmpty as Nel
 import Agda.Compiler.Backend ( IsMain )
 import Agda.Syntax.Abstract.Name ( QName )
 import Agda.Syntax.Common.Pretty ( prettyShow )
-import Agda.Syntax.Common ( Arg(..), Named(..), ArgName )
+import Agda.Syntax.Common ( Arg(..), ArgName, Named(..), moduleNameParts )
 import Agda.Syntax.Internal (
   Clause(..), DeBruijnPattern, DBPatVar(..), Dom(..), unDom, PatternInfo(..), Pattern'(..),
   qnameName, qnameModule, Telescope, Tele(..), Term(..), Type, Type''(..) )
@@ -22,9 +22,10 @@ import Agda.Compiler.Rust.CommonTypes ( Options, CompiledDef, ModuleEnv )
 import Agda.Compiler.Rust.PrettyPrintingUtils (
   argList,
   bracket,
-  indent,
-  exprSeparator,
   defsSeparator,
+  exprSeparator,
+  funReturnTypeSeparator,
+  indent,
   typeSeparator )
 
 compile :: Options -> ModuleEnv -> IsMain -> Definition -> TCM CompiledDef
@@ -64,10 +65,10 @@ compileFunction defName funDef fc =
     <> showName defName
     <> argList (
       -- TODO handle multiple function clauses and arguments
-      compileFunctionArgument (head fc)
+      compileFunctionArgument fc
       <> typeSeparator <> exprSeparator
-      <> compileFunctionArgType (head fc) )
-    <> typeSeparator <> exprSeparator <> compileFunctionResultType (head fc)
+      <> compileFunctionArgType fc )
+    <> exprSeparator <> funReturnTypeSeparator <> exprSeparator <> compileFunctionResultType fc
     <> exprSeparator <> bracket (
     -- TODO proper indentation for every line of function body
     -- including nested expressions
@@ -86,8 +87,9 @@ compileFunctionArgument [] = ""
 compileFunctionArgument [fc] = fromDeBruijnPattern (namedThing (unArg (head (namedClausePats fc))))
 compileFunctionArgument xs = error "unsupported compileFunctionArgument" ++ (show xs)
 
-compileFunctionArgType :: Clause -> CompiledDef
-compileFunctionArgType Clause{clauseTel = ct} = fromTelescope ct
+compileFunctionArgType :: [Clause] -> CompiledDef
+compileFunctionArgType [ Clause{clauseTel = ct} ] = fromTelescope ct
+compileFunctionArgType xs = error "unsupported compileFunctionArgType" ++ (show xs)
 
 fromTelescope :: Telescope -> CompiledDef
 fromTelescope = \case
@@ -97,8 +99,9 @@ fromTelescope = \case
 fromDom :: Dom Type -> CompiledDef
 fromDom x = fromType (unDom x)
 
-compileFunctionResultType :: Clause -> CompiledDef
-compileFunctionResultType Clause{clauseType = ct} = fromMaybeType ct
+compileFunctionResultType :: [Clause] -> CompiledDef
+compileFunctionResultType [Clause{clauseType = ct}] = fromMaybeType ct
+compileFunctionResultType other = error ("unhandled compileFunctionResultType" ++ show other)
 
 fromMaybeType :: Maybe (Arg Type) -> CompiledDef
 fromMaybeType (Just argType) = fromArgType argType

@@ -1,4 +1,4 @@
-module Hello where
+module test.hello where
 
 -- simple record type
 data TheRgb : Set where
@@ -14,9 +14,9 @@ data TheWeekDay : Set where
   Monday Tuesday Wednesday Thursday Friday Saturday Sunday : TheWeekDay
 {-# COMPILE AGDA2RUST TheWeekDay #-}
 
-asFriday : TheRgb → TheWeekDay
-asFriday rgbArg = Friday -- TODO compile body
-{-# COMPILE AGDA2RUST asFriday #-}
+-- asFriday : TheRgb → TheWeekDay
+-- asFriday rgbArg = Friday -- TODO compile body
+-- {-# COMPILE AGDA2RUST asFriday #-}
 
 -- TODO multiple clauses
 -- day-color : TheWeekDay → TheRgb

@@ -1,13 +1,12 @@
-mod hello {
-
-pub enum TheRgb {
+mod test {
+enum TheRgb {
   Red, Green, Blue
 }
 
 
 
-pub fn id_rgb(rgb_arg: TheRgb) -> TheRgb {
-  return rgb_arg
+pub fn idRgb(rgbArg: TheRgb) -> TheRgb {
+  return rgbArg
 }
 
 enum TheWeekDay {
@@ -19,10 +18,6 @@ enum TheWeekDay {
 
 
 
-
-pub fn asFriday(rgbArg: TheRgb) -> TheWeekDay {
-  return rgbArg
-}
 
 
 }

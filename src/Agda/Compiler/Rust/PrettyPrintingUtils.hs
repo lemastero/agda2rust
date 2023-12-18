@@ -1,9 +1,10 @@
 module Agda.Compiler.Rust.PrettyPrintingUtils (
   argList,
   bracket,
-  indent,
-  exprSeparator,
   defsSeparator,
+  exprSeparator,
+  funReturnTypeSeparator,
+  indent,
   typeSeparator
 ) where
 
@@ -24,3 +25,6 @@ defsSeparator = "\n"
 
 typeSeparator :: String
 typeSeparator = ":"
+
+funReturnTypeSeparator :: String
+funReturnTypeSeparator = "->"
