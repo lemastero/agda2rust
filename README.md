@@ -5,15 +5,15 @@
 ```sh
 cabal run -- agda2rust --help
 
-cabal run -- agda2rust test/Hello.agda
-cabal run -- agda2rust test/Test.agda
+cabal run -- agda2rust test/hello.agda
+cabal run -- agda2rust test/test.agda
 ```
 
 * Testing compiled Rust code
 
 ```sh
-rustc --crate-type=lib test/Hello.rs
-rustc --crate-type=lib test/Test.rs
+rustc --crate-type=lib test/hello.rs
+rustc --crate-type=lib test/test.rs
 ```
 
 # Working with source code
