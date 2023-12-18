@@ -22,6 +22,7 @@ import Agda.Compiler.Rust.CommonTypes ( Options, CompiledDef, ModuleEnv )
 import Agda.Compiler.Rust.PrettyPrintingUtils (
   argList,
   bracket,
+  combineLines,
   defsSeparator,
   exprSeparator,
   funReturnTypeSeparator,
@@ -149,7 +150,7 @@ showName = prettyShow . qnameName
 compileModule :: TopLevelModuleName -> [CompiledDef] -> String
 compileModule mName cdefs =
   moduleHeader (moduleName mName)
-  <> bracket (unlines (map prettyShow cdefs))
+  <> bracket (combineLines (map prettyShow cdefs))
   <> defsSeparator
 
 moduleName :: TopLevelModuleName -> String

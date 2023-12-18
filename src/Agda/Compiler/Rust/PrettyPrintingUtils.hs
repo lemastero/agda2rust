@@ -1,6 +1,7 @@
 module Agda.Compiler.Rust.PrettyPrintingUtils (
   argList,
   bracket,
+  combineLines,
   defsSeparator,
   exprSeparator,
   funReturnTypeSeparator,
@@ -28,3 +29,6 @@ typeSeparator = ":"
 
 funReturnTypeSeparator :: String
 funReturnTypeSeparator = "->"
+
+combineLines :: [String] -> String
+combineLines xs = unlines (filter (not . null) xs)
