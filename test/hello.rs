@@ -19,5 +19,9 @@ enum TheWeekDay {
 
 
 
+pub fn as_friday(arg: TheRgb) -> TheWeekDay {
+  return arg
+}
+
 
 }

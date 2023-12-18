@@ -55,11 +55,11 @@ jobs:
       - name: Compile Hello.agda to Rust
         run: cabal run -- agda2rust ./test/hello.agda
         
-      - name: Install Rust latest nightly
+      - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
             profile: minimal
             toolchain: stable
 
-      - name: Compile Hello
-        run: rustc --crate-type=lib test/Hello.rs
+      - name: Compile using Rust compiler output files
+        run: rustc --crate-type=lib test/hello.rs
