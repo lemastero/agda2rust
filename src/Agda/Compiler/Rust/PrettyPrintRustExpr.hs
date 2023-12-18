@@ -1,4 +1,4 @@
-module Agda.Compiler.Rust.PrettyPrintRustExpr ( prettyPrintRustExpr ) where
+module Agda.Compiler.Rust.PrettyPrintRustExpr ( prettyPrintRustExpr, moduleHeader ) where
 
 import Data.List ( intersperse )
 import Agda.Compiler.Rust.CommonTypes ( CompiledDef )
@@ -61,4 +61,3 @@ prettyPrintFunctionBody fBody = "return" <> exprSeparator <> fBody <> ";"
 
 moduleHeader :: String -> String
 moduleHeader mName = "mod" <> exprSeparator <> mName <> exprSeparator
-
