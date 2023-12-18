@@ -4,6 +4,7 @@ module Agda.Compiler.Rust.ToRustCompiler ( compile, compileModule, moduleHeader 
 
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 import Data.List ( intersperse )
+import qualified Data.List.NonEmpty as Nel
 
 import Agda.Compiler.Backend ( IsMain )
 import Agda.Syntax.Abstract.Name ( QName )
@@ -80,8 +81,10 @@ compileFunction defName funDef fc =
 -- TODO read docs for `data Clause` section in https://hackage.haskell.org/package/Agda-2.6.4.1/docs/Agda-Syntax-Internal.html
 -- TODO start from uncommenting line below and figure out the path to match indices with name and type
 -- compileFunctionArgument fc = show fc
-compileFunctionArgument :: Clause -> CompiledDef
-compileFunctionArgument fc = fromDeBruijnPattern (namedThing (unArg (head (namedClausePats fc))))
+compileFunctionArgument :: [Clause] -> CompiledDef
+compileFunctionArgument [] = ""
+compileFunctionArgument [fc] = fromDeBruijnPattern (namedThing (unArg (head (namedClausePats fc))))
+compileFunctionArgument xs = error "unsupported compileFunctionArgument" ++ (show xs)
 
 compileFunctionArgType :: Clause -> CompiledDef
 compileFunctionArgType Clause{clauseTel = ct} = fromTelescope ct
@@ -142,9 +145,12 @@ showName = prettyShow . qnameName
 
 compileModule :: TopLevelModuleName -> [CompiledDef] -> String
 compileModule mName cdefs =
-  moduleHeader (prettyShow mName)
+  moduleHeader (moduleName mName)
   <> bracket (unlines (map prettyShow cdefs))
   <> defsSeparator
+
+moduleName :: TopLevelModuleName -> String
+moduleName n = prettyShow (Nel.head (moduleNameParts n))
 
 moduleHeader :: String -> String
 moduleHeader mName = "mod" <> exprSeparator <> mName <> exprSeparator
