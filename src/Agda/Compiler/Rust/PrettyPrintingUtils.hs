@@ -11,8 +11,9 @@ prettyPrintRustExpr def = case def of
       <> name
       <> exprSeparator
       <> bracket (
-        indent -- TODO this to siplistic indentation
+        indent -- TODO this is too simplistic indentation
         <> concat (intersperse ", " fields))
+      <> defsSeparator
   (TeFun fName (RustElem aName aType) resType fBody) ->
       "pub fn" <> exprSeparator
         <> fName
@@ -22,15 +23,17 @@ prettyPrintRustExpr def = case def of
           <> aType )
         <> exprSeparator <> funReturnTypeSeparator <> exprSeparator <> resType
         <> exprSeparator <> bracket (
-        -- TODO proper indentation for every line of function body
-        -- including nested expressions
-        indent
-        <> (prettyPrintFunctionBody fBody))
+        indent <> (prettyPrintFunctionBody fBody))
         <> defsSeparator
   (TeMod mName defs) ->
     moduleHeader mName
-    <> bracket (combineLines (map prettyPrintRustExpr defs))
-    <> defsSeparator
+    <> bracket (
+      defsSeparator -- empty line before first definition in module
+      <> combineLines (map prettyPrintRustExpr defs))
+    <> defsSeparator 
+  (Unhandled name payload) -> ""
+  -- XXX at the end there should be no Unhandled expression
+  -- other -> "unsupported prettyPrintRustExpr " ++ (show other)
 
 bracket :: String -> String
 bracket str = "{\n" <> str <> "\n}"

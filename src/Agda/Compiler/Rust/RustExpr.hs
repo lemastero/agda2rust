@@ -3,7 +3,8 @@ module Agda.Compiler.Rust.RustExpr (
   RustType,
   RustExpr(..),
   RustElem(..),
-  FunBody
+  FunBody,
+  unHandled
   ) where
 
 type RustName = String
@@ -19,3 +20,7 @@ data RustExpr
   | TeFun RustName RustElem RustType FunBody
   | Unhandled RustName String
   deriving ( Show )
+
+unHandled :: RustExpr -> Bool
+unHandled (Unhandled _ _) = True
+unHandled _               = False

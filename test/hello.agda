@@ -1,22 +1,38 @@
 module test.hello where
 
--- simple record type
-data TheRgb : Set where
-  Red Green Blue : TheRgb
-{-# COMPILE AGDA2RUST TheRgb #-}
+-- simple sum type
+data Rgb : Set where
+  Red : Rgb
+  Green : Rgb
+  Blue : Rgb
+{-# COMPILE AGDA2RUST Rgb #-}
 
--- simple function
-idRgb : TheRgb → TheRgb
-idRgb rgbArg = rgbArg
-{-# COMPILE AGDA2RUST idRgb #-}
+data WeekDay : Set where
+  Monday Tuesday Wednesday Thursday Friday Saturday Sunday : WeekDay
+{-# COMPILE AGDA2RUST WeekDay #-}
 
-data TheWeekDay : Set where
-  Monday Tuesday Wednesday Thursday Friday Saturday Sunday : TheWeekDay
-{-# COMPILE AGDA2RUST TheWeekDay #-}
+-- identity function on concrete types
+id-rgb : Rgb → Rgb
+id-rgb x = x
+{-# COMPILE AGDA2RUST id-rgb #-}
 
--- asFriday : TheRgb → TheWeekDay
--- asFriday rgbArg = Friday -- TODO compile body
--- {-# COMPILE AGDA2RUST asFriday #-}
+-- product types
+
+record Pair (A B : Set) : Set where
+  field
+    fst : A
+    snd : B
+
+-- record Foo (A : Set) : Set where
+--   field
+--     foo : Pair A A
+
+-- TODO Data.Product as Rust tuple
+
+-- TODO function returning constant result
+-- as-friday : TheRgb → TheWeekDay
+-- as-friday rgbArg = Friday
+-- {-# COMPILE AGDA2RUST as-friday #-}
 
 -- TODO multiple clauses
 -- day-color : TheWeekDay → TheRgb
@@ -31,6 +47,8 @@ data TheWeekDay : Set where
 -- ≡Days? Sunday Sunday = blue
 -- ≡Days? _ _ = red
 -- {-# COMPILE AGDA2RUST ≡Days? #-}
+
+-- TODO pattern matching
 
 -- TODO polymorphic types
 
@@ -49,4 +67,4 @@ data TheWeekDay : Set where
 
 -- TODO Data.Sum
 
--- recursive functions
+-- TODO recursive functions
