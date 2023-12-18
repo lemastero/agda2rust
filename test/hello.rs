@@ -1,4 +1,4 @@
-mod test {
+mod hello {
 enum TheRgb {
   Red, Green, Blue
 }

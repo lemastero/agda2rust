@@ -154,7 +154,7 @@ compileModule mName cdefs =
   <> defsSeparator
 
 moduleName :: TopLevelModuleName -> String
-moduleName n = prettyShow (Nel.head (moduleNameParts n))
+moduleName n = prettyShow (Nel.last (moduleNameParts n))
 
 moduleHeader :: String -> String
 moduleHeader mName = "mod" <> exprSeparator <> mName <> exprSeparator
