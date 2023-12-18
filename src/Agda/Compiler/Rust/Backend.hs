@@ -23,8 +23,8 @@ import Agda.TypeChecking.Monad (
   setScope )
 
 import Agda.Compiler.Rust.CommonTypes ( Options(..), CompiledDef, ModuleEnv )
-import Agda.Compiler.Rust.ToRustCompiler ( compile, compileModule )
-import Agda.Compiler.Rust.PrettyPrintingUtils ( prettyPrintRustExpr )
+import Agda.Compiler.Rust.AgdaToRustExpr ( compile, compileModule )
+import Agda.Compiler.Rust.PrettyPrintRustExpr ( prettyPrintRustExpr )
 
 runRustBackend :: IO ()
 runRustBackend = runAgda [Backend backend]

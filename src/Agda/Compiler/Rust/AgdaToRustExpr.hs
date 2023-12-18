@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase, RecordWildCards #-}
 
-module Agda.Compiler.Rust.ToRustCompiler ( compile, compileModule ) where
+module Agda.Compiler.Rust.AgdaToRustExpr ( compile, compileModule ) where
 
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 import qualified Data.List.NonEmpty as Nel
