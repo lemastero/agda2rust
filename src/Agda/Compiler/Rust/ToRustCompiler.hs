@@ -1,9 +1,8 @@
 {-# LANGUAGE LambdaCase, RecordWildCards #-}
 
-module Agda.Compiler.Rust.ToRustCompiler ( compile, compileModule, moduleHeader ) where
+module Agda.Compiler.Rust.ToRustCompiler ( compile, compileModule ) where
 
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
-import Data.List ( intersperse )
 import qualified Data.List.NonEmpty as Nel
 
 import Agda.Compiler.Backend ( IsMain )
@@ -19,27 +18,17 @@ import Agda.TypeChecking.Monad
 import Agda.TypeChecking.CompiledClause ( CompiledClauses(..), CompiledClauses'(..) )
 
 import Agda.Compiler.Rust.CommonTypes ( Options, CompiledDef, ModuleEnv )
-import Agda.Compiler.Rust.PrettyPrintingUtils (
-  argList,
-  bracket,
-  combineLines,
-  defsSeparator,
-  exprSeparator,
-  funReturnTypeSeparator,
-  indent,
-  typeSeparator )
+import Agda.Compiler.Rust.RustExpr ( RustExpr(..), RustName, RustType, RustElem(..), FunBody )
 
 compile :: Options -> ModuleEnv -> IsMain -> Definition -> TCM CompiledDef
 compile _ _ _ Defn{..}
   = withCurrentModule (qnameModule defName)
   $ getUniqueCompilerPragma "AGDA2RUST" defName >>= \case
-      Nothing -> return []
-      Just (CompilerPragma _ _) ->
+      Nothing -> return $ Unhandled "compile" ""
+      Just (CompilerPragma _ _) -> 
         return $ compileDefn defName theDef
 
-compileDefn :: QName
-  -> Defn
-  -> CompiledDef
+compileDefn :: QName -> Defn -> CompiledDef
 compileDefn defName theDef =
   case theDef of 
     Datatype{dataCons = fields} ->
@@ -47,84 +36,66 @@ compileDefn defName theDef =
     Function{funCompiled = funDef, funClauses = fc} ->
       compileFunction defName funDef fc
     _ ->
-      "Unsupported compileDefn" <> showName defName <> " = " <> prettyShow theDef
+      Unhandled "compileDefn" (show defName ++ " = " ++ show theDef)
 
 compileDataType :: QName -> [QName] -> CompiledDef
-compileDataType defName fields = "enum" <> exprSeparator
-  <> showName defName
-  <> exprSeparator
-  <> bracket (
-    indent
-    <> concat (intersperse ", " (map showName fields)))
+compileDataType defName fields = TeEnum (showName defName) (map showName fields)
 
 compileFunction :: QName
   -> Maybe CompiledClauses
   -> [Clause]
   -> CompiledDef
-compileFunction defName funDef fc = 
-  "pub fn" <> exprSeparator
-    <> showName defName
-    <> argList (
-      -- TODO handle multiple function clauses and arguments
-      compileFunctionArgument fc
-      <> typeSeparator <> exprSeparator
-      <> compileFunctionArgType fc )
-    <> exprSeparator <> funReturnTypeSeparator <> exprSeparator <> compileFunctionResultType fc
-    <> exprSeparator <> bracket (
-    -- TODO proper indentation for every line of function body
-    -- including nested expressions
-    -- build intermediate AST and pretty printer for it
-    indent
-    <> compileFunctionBody funDef)
-    <> defsSeparator
+compileFunction defName funDef fc = TeFun
+  (showName defName)
+  (RustElem (compileFunctionArgument fc) (compileFunctionArgType fc))
+  (compileFunctionResultType fc)
+  (compileFunctionBody funDef)
 
 -- TODO this is hacky way to reach find first argument name, assuming function has 1 argument
 -- TODO proper way is to handle deBruijn indices
--- TODO read docs for `data Clause` section in https://hackage.haskell.org/package/Agda-2.6.4.1/docs/Agda-Syntax-Internal.html
--- TODO start from uncommenting line below and figure out the path to match indices with name and type
--- compileFunctionArgument fc = show fc
-compileFunctionArgument :: [Clause] -> CompiledDef
+-- TODO see `data Clause` in https://hackage.haskell.org/package/Agda-2.6.4.1/docs/Agda-Syntax-Internal.html
+compileFunctionArgument :: [Clause] -> RustName
 compileFunctionArgument [] = ""
 compileFunctionArgument [fc] = fromDeBruijnPattern (namedThing (unArg (head (namedClausePats fc))))
-compileFunctionArgument xs = error "unsupported compileFunctionArgument" ++ (show xs)
+compileFunctionArgument xs = error "unsupported compileFunctionArgument" ++ (show xs) -- show xs
 
-compileFunctionArgType :: [Clause] -> CompiledDef
+compileFunctionArgType :: [Clause] -> RustType
 compileFunctionArgType [ Clause{clauseTel = ct} ] = fromTelescope ct
 compileFunctionArgType xs = error "unsupported compileFunctionArgType" ++ (show xs)
 
-fromTelescope :: Telescope -> CompiledDef
+fromTelescope :: Telescope -> RustName
 fromTelescope = \case
   ExtendTel a _ -> fromDom a
   other -> error ("unhandled fromType" ++ show other)
 
-fromDom :: Dom Type -> CompiledDef
+fromDom :: Dom Type -> RustName
 fromDom x = fromType (unDom x)
 
-compileFunctionResultType :: [Clause] -> CompiledDef
+compileFunctionResultType :: [Clause] -> RustType
 compileFunctionResultType [Clause{clauseType = ct}] = fromMaybeType ct
 compileFunctionResultType other = error ("unhandled compileFunctionResultType" ++ show other)
 
-fromMaybeType :: Maybe (Arg Type) -> CompiledDef
+fromMaybeType :: Maybe (Arg Type) -> RustName
 fromMaybeType (Just argType) = fromArgType argType
 fromMaybeType other = error ("unhandled fromMaybeType" ++ show other)
 
-fromArgType :: Arg Type -> CompiledDef
+fromArgType :: Arg Type -> RustName
 fromArgType arg = fromType (unArg arg)
 
-fromType :: Type -> CompiledDef
+fromType :: Type -> RustName
 fromType = \case
   a@(El _ ue) -> fromTerm ue
   other -> error ("unhandled fromType" ++ show other)
 
-fromTerm :: Term -> CompiledDef
+fromTerm :: Term -> RustName
 fromTerm = \case
   Def qname el -> fromQName qname
   other -> error ("unhandled fromTerm" ++ show other)
 
-fromQName :: QName -> CompiledDef
+fromQName :: QName -> RustName
 fromQName x = prettyShow (qnameName x)
 
-fromDeBruijnPattern :: DeBruijnPattern -> CompiledDef
+fromDeBruijnPattern :: DeBruijnPattern -> RustName
 fromDeBruijnPattern = \case
     VarP a b -> (dbPatVarName b)
     a@(ConP x y z) -> show a
@@ -132,29 +103,24 @@ fromDeBruijnPattern = \case
 
 -- TODO this is wrong for function other than identity
 -- see asFriday in Hello.agda vs Hello.rs
-compileFunctionBody :: Maybe CompiledClauses -> CompiledDef
-compileFunctionBody (Just funDef) = "return" <> exprSeparator <> fromCompiledClauses funDef
+compileFunctionBody :: Maybe CompiledClauses -> FunBody
+compileFunctionBody (Just funDef) = fromCompiledClauses funDef
 compileFunctionBody funDef = error ("unhandled compileFunctionBody " ++ show funDef)
 
-fromCompiledClauses :: CompiledClauses -> CompiledDef
+fromCompiledClauses :: CompiledClauses -> FunBody
 fromCompiledClauses = \case
   (Done (x:xs) term) -> fromArgName x
   other               -> error ("unhandled fromCompiledClauses " ++ show other)
 
-fromArgName :: Arg ArgName -> CompiledDef
+fromArgName :: Arg ArgName -> FunBody
 fromArgName = unArg
 
-showName :: QName -> CompiledDef
+showName :: QName -> RustName
 showName = prettyShow . qnameName
 
-compileModule :: TopLevelModuleName -> [CompiledDef] -> String
+compileModule :: TopLevelModuleName -> [CompiledDef] -> CompiledDef
 compileModule mName cdefs =
-  moduleHeader (moduleName mName)
-  <> bracket (combineLines (map prettyShow cdefs))
-  <> defsSeparator
+  TeMod (moduleName mName) cdefs
 
 moduleName :: TopLevelModuleName -> String
 moduleName n = prettyShow (Nel.last (moduleNameParts n))
-
-moduleHeader :: String -> String
-moduleHeader mName = "mod" <> exprSeparator <> mName <> exprSeparator

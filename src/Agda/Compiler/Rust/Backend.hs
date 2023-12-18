@@ -24,6 +24,7 @@ import Agda.TypeChecking.Monad (
 
 import Agda.Compiler.Rust.CommonTypes ( Options(..), CompiledDef, ModuleEnv )
 import Agda.Compiler.Rust.ToRustCompiler ( compile, compileModule )
+import Agda.Compiler.Rust.PrettyPrintingUtils ( prettyPrintRustExpr )
 
 runRustBackend :: IO ()
 runRustBackend = runAgda [Backend backend]
@@ -79,9 +80,9 @@ writeModule :: Options
 writeModule opts _ _ mName cdefs = do
   outDir <- compileDir
   compileLog $ "compiling " <> fileName
-  unless (all null cdefs) $ liftIO
+  unless (null cdefs) $ liftIO
     $ writeFile (outFile outDir)
-    $ compileModule mName cdefs
+    $ prettyPrintRustExpr (compileModule mName cdefs)
   where
     fileName = rustFileName mName
     dirName outDir = fromMaybe outDir (optOutDir opts)
