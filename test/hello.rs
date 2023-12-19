@@ -1,13 +1,16 @@
 mod hello {
-enum TheRgb {
+
+enum Rgb {
   Red, Green, Blue
 }
-pub fn idRgb(rgbArg: TheRgb) -> TheRgb {
-  return rgbArg
-}
 
-enum TheWeekDay {
+enum WeekDay {
   Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 }
+
+pub fn id_rgb(x: Rgb) -> Rgb {
+  return x;
+}
+
 
 }

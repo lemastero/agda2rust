@@ -3,7 +3,7 @@ module Agda.Compiler.Rust.Backend (
   backend,
   defaultOptions ) where
 
-import Control.Monad ( when )
+import Control.Monad ( unless )
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 import Control.DeepSeq ( NFData(..) )
 import Data.Maybe ( fromMaybe )
@@ -24,6 +24,7 @@ import Agda.TypeChecking.Monad (
 
 import Agda.Compiler.Rust.CommonTypes ( Options(..), CompiledDef, ModuleEnv )
 import Agda.Compiler.Rust.AgdaToRustExpr ( compile, compileModule )
+import Agda.Compiler.Rust.RustExpr ( unHandled )
 import Agda.Compiler.Rust.PrettyPrintingUtils ( prettyPrintRustExpr )
 
 runRustBackend :: IO ()
@@ -80,7 +81,7 @@ writeModule :: Options
 writeModule opts _ _ mName cdefs = do
   outDir <- compileDir
   compileLog $ "compiling " <> fileName
-  when (null cdefs) $ liftIO
+  unless (all unHandled cdefs) $ liftIO
     $ writeFile (outFile outDir)
     $ prettyPrintRustExpr (compileModule mName cdefs)
   where
