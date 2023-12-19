@@ -15,12 +15,13 @@ data RustElem = RustElem RustName RustType
   deriving ( Show )
 
 data RustExpr
-  = TeMod RustName [RustExpr]
-  | TeEnum RustName [RustName]
-  | TeFun RustName RustElem RustType FunBody
+  = ReMod RustName [RustExpr]
+  | ReEnum RustName [RustName]
+  | ReFun RustName RustElem RustType FunBody -- TODO [RustElem]
+  | ReRec RustName RustName -- TODO [RustElem]
   | Unhandled RustName String
   deriving ( Show )
 
 unHandled :: RustExpr -> Bool
-unHandled (Unhandled _ _) = True
+unHandled (Unhandled "" "") = True
 unHandled _               = False

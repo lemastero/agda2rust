@@ -6,7 +6,7 @@ import Agda.Compiler.Rust.RustExpr ( RustExpr(..), RustElem(..), FunBody )
 
 prettyPrintRustExpr :: CompiledDef -> String
 prettyPrintRustExpr def = case def of
-  (TeEnum name fields) ->
+  (ReEnum name fields) ->
     "enum" <> exprSeparator
       <> name
       <> exprSeparator
@@ -14,7 +14,7 @@ prettyPrintRustExpr def = case def of
         indent -- TODO this is too simplistic indentation
         <> concat (intersperse ", " fields))
       <> defsSeparator
-  (TeFun fName (RustElem aName aType) resType fBody) ->
+  (ReFun fName (RustElem aName aType) resType fBody) ->
       "pub fn" <> exprSeparator
         <> fName
         <> argList (
@@ -25,12 +25,15 @@ prettyPrintRustExpr def = case def of
         <> exprSeparator <> bracket (
         indent <> (prettyPrintFunctionBody fBody))
         <> defsSeparator
-  (TeMod mName defs) ->
+  (ReMod mName defs) ->
     moduleHeader mName
     <> bracket (
       defsSeparator -- empty line before first definition in module
       <> combineLines (map prettyPrintRustExpr defs))
     <> defsSeparator 
+  (ReRec name payload) -> "pub struct" <> exprSeparator <> name
+    <> exprSeparator <> (bracket payload)
+    <> defsSeparator
   (Unhandled name payload) -> ""
   -- XXX at the end there should be no Unhandled expression
   -- other -> "unsupported prettyPrintRustExpr " ++ (show other)

@@ -12,5 +12,9 @@ pub fn id_rgb(x: Rgb) -> Rgb {
   return x;
 }
 
+pub struct ThePair {
+(pairFst : test.hello.Rgb) (pairSnd : test.hello.WeekDay)
+}
+
 
 }

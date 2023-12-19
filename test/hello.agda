@@ -18,11 +18,11 @@ id_rgb x = x
 
 -- product types
 
--- record ThePair : Set where
---   field
---     pairFst : Rgb
---     pairSnd : WeekDay
--- {-# COMPILE AGDA2RUST ThePair #-}
+record ThePair : Set where
+  field
+    pairFst : Rgb
+    pairSnd : WeekDay
+{-# COMPILE AGDA2RUST ThePair #-}
 
 -- record Foo (A : Set) : Set where
 --   field

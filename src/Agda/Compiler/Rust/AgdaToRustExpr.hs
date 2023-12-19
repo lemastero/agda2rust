@@ -30,22 +30,28 @@ compile _ _ _ Defn{..}
 
 compileDefn :: QName -> Defn -> CompiledDef
 compileDefn defName theDef =
+  -- https://hackage.haskell.org/package/Agda/docs/Agda-Compiler-Backend.html#t:Defn
   case theDef of 
     Datatype{dataCons = fields} ->
       compileDataType defName fields
     Function{funCompiled = funDef, funClauses = fc} ->
       compileFunction defName funDef fc
-    _ ->
-      Unhandled "compileDefn" (show defName ++ " = " ++ show theDef)
+    RecordDefn(RecordData{_recFields = recFields, _recTel = recTel}) ->
+      compileRecord defName recFields recTel
+    other ->
+      Unhandled "compileDefn" (show defName ++ "\n = \n" ++ show theDef)
 
 compileDataType :: QName -> [QName] -> CompiledDef
-compileDataType defName fields = TeEnum (showName defName) (map showName fields)
+compileDataType defName fields = ReEnum (showName defName) (map showName fields)
+
+compileRecord :: QName -> [Dom QName] -> Telescope -> CompiledDef
+compileRecord defName recFields recTel = ReRec (showName defName) (prettyShow recTel)
 
 compileFunction :: QName
   -> Maybe CompiledClauses
   -> [Clause]
   -> CompiledDef
-compileFunction defName funDef fc = TeFun
+compileFunction defName funDef fc = ReFun
   (showName defName)
   (RustElem (compileFunctionArgument fc) (compileFunctionArgType fc))
   (compileFunctionResultType fc)
@@ -120,7 +126,7 @@ showName = prettyShow . qnameName
 
 compileModule :: TopLevelModuleName -> [CompiledDef] -> CompiledDef
 compileModule mName cdefs =
-  TeMod (moduleName mName) cdefs
+  ReMod (moduleName mName) cdefs
 
 moduleName :: TopLevelModuleName -> String
 moduleName n = prettyShow (Nel.last (moduleNameParts n))
