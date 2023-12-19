@@ -51,6 +51,9 @@ jobs:
       
       - name: Run tests
         run: cabal test all
+      
+      - name: Remove hello.rs
+        run: rm -rf test/hello.rs
 
       - name: Compile Hello.agda to Rust
         run: cabal run -- agda2rust ./test/hello.agda
@@ -61,5 +64,5 @@ jobs:
             profile: minimal
             toolchain: stable
 
-      - name: Compile using Rust compiler output files
+      - name: Compile hello.rs using Rust compiler
         run: rustc --crate-type=lib test/hello.rs
