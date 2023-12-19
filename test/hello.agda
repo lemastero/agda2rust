@@ -12,16 +12,17 @@ data WeekDay : Set where
 {-# COMPILE AGDA2RUST WeekDay #-}
 
 -- identity function on concrete types
-id-rgb : Rgb → Rgb
-id-rgb x = x
-{-# COMPILE AGDA2RUST id-rgb #-}
+id_rgb : Rgb → Rgb
+id_rgb x = x
+{-# COMPILE AGDA2RUST id_rgb #-}
 
 -- product types
 
-record Pair (A B : Set) : Set where
-  field
-    fst : A
-    snd : B
+-- record ThePair : Set where
+--   field
+--     pairFst : Rgb
+--     pairSnd : WeekDay
+-- {-# COMPILE AGDA2RUST ThePair #-}
 
 -- record Foo (A : Set) : Set where
 --   field

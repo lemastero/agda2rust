@@ -8,7 +8,7 @@ enum WeekDay {
   Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 }
 
-pub fn id-rgb(x: Rgb) -> Rgb {
+pub fn id_rgb(x: Rgb) -> Rgb {
   return x;
 }
 
