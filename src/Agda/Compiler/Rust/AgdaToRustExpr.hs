@@ -8,7 +8,8 @@ import qualified Data.List.NonEmpty as Nel
 import Agda.Compiler.Backend ( IsMain )
 import Agda.Syntax.Abstract.Name ( QName )
 import Agda.Syntax.Common.Pretty ( prettyShow )
-import Agda.Syntax.Common ( Arg(..), ArgName, Named(..), moduleNameParts )
+import Agda.Syntax.Common ( moduleNameParts )
+import Agda.Syntax.Common ( Arg(..), ArgName, Named(..), NamedName, WithOrigin(..), Ranged(..) )
 import Agda.Syntax.Internal (
   Clause(..), DeBruijnPattern, DBPatVar(..), Dom(..), unDom, PatternInfo(..), Pattern'(..),
   qnameName, qnameModule, Telescope, Tele(..), Term(..), Type, Type''(..) )
@@ -16,6 +17,20 @@ import Agda.Syntax.TopLevelModuleName ( TopLevelModuleName )
 import Agda.TypeChecking.Monad.Base ( Definition(..) )
 import Agda.TypeChecking.Monad
 import Agda.TypeChecking.CompiledClause ( CompiledClauses(..), CompiledClauses'(..) )
+
+import Agda.Compiler.Backend ( funCompiled, funClauses, Defn(..), RecordData(..))
+import Agda.Syntax.Abstract.Name ( QName )
+import Agda.Syntax.Common.Pretty ( prettyShow )
+import Agda.Syntax.Common ( Arg(..), ArgName, Named(..), NamedName, WithOrigin(..), Ranged(..) )
+import Agda.Syntax.Internal (
+  Clause(..), DeBruijnPattern, DBPatVar(..), Dom(..), Dom'(..), unDom, PatternInfo(..), Pattern'(..),
+  qnameName, qnameModule, Telescope, Tele(..), Term(..), Type, Type''(..) )
+import Agda.TypeChecking.Monad.Base ( Definition(..) )
+import Agda.TypeChecking.Monad
+import Agda.TypeChecking.CompiledClause ( CompiledClauses(..), CompiledClauses'(..) )
+import Agda.TypeChecking.Telescope ( teleNamedArgs, teleArgs, teleArgNames )
+
+import Agda.Syntax.Common.Pretty ( prettyShow )
 
 import Agda.Compiler.Rust.CommonTypes ( Options, CompiledDef, ModuleEnv )
 import Agda.Compiler.Rust.RustExpr ( RustExpr(..), RustName, RustType, RustElem(..), FunBody )
@@ -45,7 +60,19 @@ compileDataType :: QName -> [QName] -> CompiledDef
 compileDataType defName fields = ReEnum (showName defName) (map showName fields)
 
 compileRecord :: QName -> [Dom QName] -> Telescope -> CompiledDef
-compileRecord defName recFields recTel = ReRec (showName defName) (prettyShow recTel)
+compileRecord defName recFields recTel = ReRec (showName defName) (foldl varsFromTelescope [] recTel)
+
+varsFromTelescope :: [RustElem] -> Dom Type -> [RustElem]
+varsFromTelescope xs dt = RustElem (nameFromDom dt) (fromDom dt) : xs
+
+nameFromDom :: Dom Type -> RustName
+nameFromDom dt = case (domName dt) of
+  Nothing -> error ("\nnameFromDom [" ++ show dt ++ "]\n")
+  Just a -> namedNameToStr a
+
+-- https://hackage.haskell.org/package/Agda-2.6.4.3/docs/Agda-Syntax-Common.html#t:NamedName
+namedNameToStr :: NamedName -> RustName
+namedNameToStr n = rangedThing (woThing n)
 
 compileFunction :: QName
   -> Maybe CompiledClauses
@@ -53,7 +80,7 @@ compileFunction :: QName
   -> CompiledDef
 compileFunction defName funDef fc = ReFun
   (showName defName)
-  (RustElem (compileFunctionArgument fc) (compileFunctionArgType fc))
+  [(RustElem (compileFunctionArgument fc) (compileFunctionArgType fc))]
   (compileFunctionResultType fc)
   (compileFunctionBody funDef)
 

@@ -1,6 +1,6 @@
 module Agda.Compiler.Rust.PrettyPrintingUtils ( prettyPrintRustExpr, moduleHeader ) where
 
-import Data.List ( intersperse )
+import Data.List ( intersperse, intercalate )
 import Agda.Compiler.Rust.CommonTypes ( CompiledDef )
 import Agda.Compiler.Rust.RustExpr ( RustExpr(..), RustElem(..), FunBody )
 
@@ -14,7 +14,7 @@ prettyPrintRustExpr def = case def of
         indent -- TODO this is too simplistic indentation
         <> concat (intersperse ", " fields))
       <> defsSeparator
-  (ReFun fName (RustElem aName aType) resType fBody) ->
+  (ReFun fName [RustElem aName aType] resType fBody) ->
       "pub fn" <> exprSeparator
         <> fName
         <> argList (
@@ -31,8 +31,8 @@ prettyPrintRustExpr def = case def of
       defsSeparator -- empty line before first definition in module
       <> combineLines (map prettyPrintRustExpr defs))
     <> defsSeparator 
-  (ReRec name payload) -> "pub struct" <> exprSeparator <> name
-    <> exprSeparator <> (bracket payload)
+  (ReRec name args) -> "pub struct" <> exprSeparator <> name
+    <> exprSeparator <> (bracket (combineThem ",\n"  (map (indent ++) (map printVar args))))
     <> defsSeparator
   (Unhandled name payload) -> ""
   -- XXX at the end there should be no Unhandled expression
@@ -43,6 +43,9 @@ bracket str = "{\n" <> str <> "\n}"
 
 argList :: String -> String
 argList str = "(" <> str <> ")"
+
+printVar :: RustElem -> String
+printVar (RustElem sName sType) = sName <> ":" <> exprSeparator <> sType
 
 indent :: String
 indent = "  "
@@ -61,6 +64,9 @@ funReturnTypeSeparator = "->"
 
 combineLines :: [String] -> String
 combineLines xs = unlines (filter (not . null) xs)
+
+combineThem :: String -> [String] -> String
+combineThem s xs = intercalate s xs
 
 prettyPrintFunctionBody :: FunBody -> String
 prettyPrintFunctionBody fBody = "return" <> exprSeparator <> fBody <> ";"

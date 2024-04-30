@@ -17,11 +17,11 @@ data RustElem = RustElem RustName RustType
 data RustExpr
   = ReMod RustName [RustExpr]
   | ReEnum RustName [RustName]
-  | ReFun RustName RustElem RustType FunBody -- TODO [RustElem]
-  | ReRec RustName RustName -- TODO [RustElem]
+  | ReFun RustName [RustElem] RustType FunBody
+  | ReRec RustName [RustElem]
   | Unhandled RustName String
   deriving ( Show )
 
 unHandled :: RustExpr -> Bool
-unHandled (Unhandled "" "") = True
+unHandled (Unhandled _ _) = True
 unHandled _               = False
