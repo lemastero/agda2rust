@@ -5,32 +5,19 @@ module Agda.Compiler.Rust.AgdaToRustExpr ( compile, compileModule ) where
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 import qualified Data.List.NonEmpty as Nel
 
-import Agda.Compiler.Backend ( IsMain )
+import Agda.Compiler.Backend ( Defn(..), funCompiled, funClauses, IsMain, RecordData(..))
 import Agda.Syntax.Abstract.Name ( QName )
 import Agda.Syntax.Common.Pretty ( prettyShow )
 import Agda.Syntax.Common ( moduleNameParts )
 import Agda.Syntax.Common ( Arg(..), ArgName, Named(..), NamedName, WithOrigin(..), Ranged(..) )
 import Agda.Syntax.Internal (
-  Clause(..), DeBruijnPattern, DBPatVar(..), Dom(..), unDom, PatternInfo(..), Pattern'(..),
+  Clause(..), DeBruijnPattern, DBPatVar(..), Dom(..), Dom'(..), unDom, PatternInfo(..), Pattern'(..),
   qnameName, qnameModule, Telescope, Tele(..), Term(..), Type, Type''(..) )
 import Agda.Syntax.TopLevelModuleName ( TopLevelModuleName )
 import Agda.TypeChecking.Monad.Base ( Definition(..) )
 import Agda.TypeChecking.Monad
 import Agda.TypeChecking.CompiledClause ( CompiledClauses(..), CompiledClauses'(..) )
-
-import Agda.Compiler.Backend ( funCompiled, funClauses, Defn(..), RecordData(..))
-import Agda.Syntax.Abstract.Name ( QName )
-import Agda.Syntax.Common.Pretty ( prettyShow )
-import Agda.Syntax.Common ( Arg(..), ArgName, Named(..), NamedName, WithOrigin(..), Ranged(..) )
-import Agda.Syntax.Internal (
-  Clause(..), DeBruijnPattern, DBPatVar(..), Dom(..), Dom'(..), unDom, PatternInfo(..), Pattern'(..),
-  qnameName, qnameModule, Telescope, Tele(..), Term(..), Type, Type''(..) )
-import Agda.TypeChecking.Monad.Base ( Definition(..) )
-import Agda.TypeChecking.Monad
-import Agda.TypeChecking.CompiledClause ( CompiledClauses(..), CompiledClauses'(..) )
 import Agda.TypeChecking.Telescope ( teleNamedArgs, teleArgs, teleArgNames )
-
-import Agda.Syntax.Common.Pretty ( prettyShow )
 
 import Agda.Compiler.Rust.CommonTypes ( Options, CompiledDef, ModuleEnv )
 import Agda.Compiler.Rust.RustExpr ( RustExpr(..), RustName, RustType, RustElem(..), FunBody )
