@@ -18,17 +18,16 @@ id_rgb x = x
 
 -- product types
 
--- record ThePair : Set where
---   field
---     pairFst : Rgb
---     pairSnd : WeekDay
--- {-# COMPILE AGDA2RUST ThePair #-}
+record ThePair : Set where
+  field
+    pairFst : Rgb
+    pairSnd : WeekDay
+{-# COMPILE AGDA2RUST ThePair #-}
 
--- record Foo (A : Set) : Set where
---   field
---     foo : Pair A A
-
--- TODO Data.Product as Rust tuple
+record Foo : Set where
+  field
+    foo : ThePair
+{-# COMPILE AGDA2RUST Foo #-}
 
 -- TODO function returning constant result
 -- as-friday : TheRgb → TheWeekDay
@@ -53,6 +52,7 @@ id_rgb x = x
 
 -- TODO polymorphic types
 
+-- TODO Data.Product as Rust tuple
 -- TODO Data.Bool
 -- TODO if expressions, and, or
 

@@ -5,17 +5,19 @@ module Agda.Compiler.Rust.AgdaToRustExpr ( compile, compileModule ) where
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 import qualified Data.List.NonEmpty as Nel
 
-import Agda.Compiler.Backend ( IsMain )
+import Agda.Compiler.Backend ( Defn(..), funCompiled, funClauses, IsMain, RecordData(..))
 import Agda.Syntax.Abstract.Name ( QName )
 import Agda.Syntax.Common.Pretty ( prettyShow )
-import Agda.Syntax.Common ( Arg(..), ArgName, Named(..), moduleNameParts )
+import Agda.Syntax.Common ( moduleNameParts )
+import Agda.Syntax.Common ( Arg(..), ArgName, Named(..), NamedName, WithOrigin(..), Ranged(..) )
 import Agda.Syntax.Internal (
-  Clause(..), DeBruijnPattern, DBPatVar(..), Dom(..), unDom, PatternInfo(..), Pattern'(..),
+  Clause(..), DeBruijnPattern, DBPatVar(..), Dom(..), Dom'(..), unDom, PatternInfo(..), Pattern'(..),
   qnameName, qnameModule, Telescope, Tele(..), Term(..), Type, Type''(..) )
 import Agda.Syntax.TopLevelModuleName ( TopLevelModuleName )
 import Agda.TypeChecking.Monad.Base ( Definition(..) )
 import Agda.TypeChecking.Monad
 import Agda.TypeChecking.CompiledClause ( CompiledClauses(..), CompiledClauses'(..) )
+import Agda.TypeChecking.Telescope ( teleNamedArgs, teleArgs, teleArgNames )
 
 import Agda.Compiler.Rust.CommonTypes ( Options, CompiledDef, ModuleEnv )
 import Agda.Compiler.Rust.RustExpr ( RustExpr(..), RustName, RustType, RustElem(..), FunBody )
@@ -30,24 +32,42 @@ compile _ _ _ Defn{..}
 
 compileDefn :: QName -> Defn -> CompiledDef
 compileDefn defName theDef =
+  -- https://hackage.haskell.org/package/Agda/docs/Agda-Compiler-Backend.html#t:Defn
   case theDef of 
     Datatype{dataCons = fields} ->
       compileDataType defName fields
     Function{funCompiled = funDef, funClauses = fc} ->
       compileFunction defName funDef fc
-    _ ->
-      Unhandled "compileDefn" (show defName ++ " = " ++ show theDef)
+    RecordDefn(RecordData{_recFields = recFields, _recTel = recTel}) ->
+      compileRecord defName recFields recTel
+    other ->
+      Unhandled "compileDefn" (show defName ++ "\n = \n" ++ show theDef)
 
 compileDataType :: QName -> [QName] -> CompiledDef
-compileDataType defName fields = TeEnum (showName defName) (map showName fields)
+compileDataType defName fields = ReEnum (showName defName) (map showName fields)
+
+compileRecord :: QName -> [Dom QName] -> Telescope -> CompiledDef
+compileRecord defName recFields recTel = ReRec (showName defName) (foldl varsFromTelescope [] recTel)
+
+varsFromTelescope :: [RustElem] -> Dom Type -> [RustElem]
+varsFromTelescope xs dt = RustElem (nameFromDom dt) (fromDom dt) : xs
+
+nameFromDom :: Dom Type -> RustName
+nameFromDom dt = case (domName dt) of
+  Nothing -> error ("\nnameFromDom [" ++ show dt ++ "]\n")
+  Just a -> namedNameToStr a
+
+-- https://hackage.haskell.org/package/Agda-2.6.4.3/docs/Agda-Syntax-Common.html#t:NamedName
+namedNameToStr :: NamedName -> RustName
+namedNameToStr n = rangedThing (woThing n)
 
 compileFunction :: QName
   -> Maybe CompiledClauses
   -> [Clause]
   -> CompiledDef
-compileFunction defName funDef fc = TeFun
+compileFunction defName funDef fc = ReFun
   (showName defName)
-  (RustElem (compileFunctionArgument fc) (compileFunctionArgType fc))
+  [(RustElem (compileFunctionArgument fc) (compileFunctionArgType fc))]
   (compileFunctionResultType fc)
   (compileFunctionBody funDef)
 
@@ -120,7 +140,7 @@ showName = prettyShow . qnameName
 
 compileModule :: TopLevelModuleName -> [CompiledDef] -> CompiledDef
 compileModule mName cdefs =
-  TeMod (moduleName mName) cdefs
+  ReMod (moduleName mName) cdefs
 
 moduleName :: TopLevelModuleName -> String
 moduleName n = prettyShow (Nel.last (moduleNameParts n))

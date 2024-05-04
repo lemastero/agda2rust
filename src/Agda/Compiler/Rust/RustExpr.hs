@@ -15,9 +15,10 @@ data RustElem = RustElem RustName RustType
   deriving ( Show )
 
 data RustExpr
-  = TeMod RustName [RustExpr]
-  | TeEnum RustName [RustName]
-  | TeFun RustName RustElem RustType FunBody
+  = ReMod RustName [RustExpr]
+  | ReEnum RustName [RustName]
+  | ReFun RustName [RustElem] RustType FunBody
+  | ReRec RustName [RustElem]
   | Unhandled RustName String
   deriving ( Show )
 
